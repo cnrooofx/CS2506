@@ -10,16 +10,6 @@ class Queue:
         self._body = [None] * 10
         self._front = 0
         self._size = 0
-    
-    def __str__(self):
-        output = '<-'
-        if self._size > 0:
-            i = self._front
-            for _ in range(self._size):
-                output += str(self._body[i]) + '-'
-                i = (i + 1) % len(self._body)
-        output += '<' + '     '
-        return output
 
     def enqueue(self, item):
         """Add an item to the queue."""
@@ -61,7 +51,7 @@ class Queue:
         return self._body[self._front]
     
     def __requeue(self):
-        """Grow/shrink the internal representation of the queue."""
+        """Grow and shrink the internal queue to save space."""
         oldbody = self._body
         oldlength = len(self._body)
         self._body = [None] * (2*self._size)
@@ -74,3 +64,15 @@ class Queue:
             oldpos = (oldpos + 1) % oldlength
         self._front = 0
         self._tail = self._size
+
+
+class FeedbackQueue(Queue):
+    def __init__(self, quantum):
+        super().__init__()
+        self._quantum = quantum
+    
+    def get_quantum(self):
+        return self._quantum
+    
+    def set_quantum(self, quantum):
+        self._quantum = quantum
