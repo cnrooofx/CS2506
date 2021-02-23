@@ -5,11 +5,16 @@ Author: Conor Fox 119322236
 """
 
 class Process:
-    def __init__(self, execution_time, priority, io=False, io_duration=0):
+    def __init__(self, name, priority, execution_time, io=False, io_duration=0):
+        self._name = name
         self._priority = priority
         self._exec_time = execution_time
         self._io = io
         self._io_time = io_duration
+    
+    def get_name(self):
+        """Return the name of the process."""
+        return self._name
     
     def get_priority(self):
         """Return the current priority of the process."""
@@ -21,18 +26,39 @@ class Process:
     
     def increase_priority(self):
         """Increase the priority of the process by 1."""
-        self._priority -= 1
+        if self._priority > 0:
+            self._priority -= 1
     
     def decrease_priority(self):
         """Decrease the priority of the process by 1."""
         self._priority += 1
     
+    def has_io(self):
+        """Return True if the process has IO operations, otherwise False."""
+        return self._io
+    
+    def get_io_time(self):
+        """Return the remaining time for IO operations."""
+        return self._io_time
+    
     def execute(self, time):
         """Execute the process and update the execution time.
 
-        Returns True if the process has completed, otherwise False
+        Returns:
+            True if the process has completed, otherwise False
         """
         self._exec_time -= time
-        if self._exec_time <= 0:
+    
+    def exec_remaining(self):
+        return self._exec_time
+    
+    def io_operation(self, time):
+        """Execute the IO operation.
+        
+        Returns:
+            True if the IO has finished, otherwise False"""
+        self._io_time -= time
+        if self._io_time <= 0:
+            self._io = False
             return True
         return False
