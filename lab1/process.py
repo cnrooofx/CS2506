@@ -5,10 +5,21 @@ Author: Conor Fox 119322236
 """
 
 class Process:
-    def __init__(self, name, priority, execution_time, io=False, io_duration=0):
+    """A Process to be executed by a scheduler."""
+
+    def __init__(self, name, priority, exec_time, io=False, io_duration=0):
+        """Initialise a new Process.
+
+        Args:
+            name (str): The name of the process
+            priority (int): Value for the process priority
+            exec_time (int): Value for the process execution time
+            io (bool): True if the process has IO operations
+            io_duration (int): Amount of IO time
+        """
         self._name = name
         self._priority = priority
-        self._exec_time = execution_time
+        self._exec_time = exec_time
         self._io = io
         self._io_time = io_duration
     
@@ -49,7 +60,8 @@ class Process:
         """
         self._exec_time -= time
     
-    def exec_remaining(self):
+    def get_exec_time(self):
+        """Return the remaining execution time left."""
         return self._exec_time
     
     def io_operation(self, time):

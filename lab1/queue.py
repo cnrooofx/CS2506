@@ -5,26 +5,17 @@ Author: Conor Fox 119322236
 """
 
 class FeedbackQueue:
+    """A Feedback Queue to manage processes in a scheduler."""
+
     def __init__(self, quantum):
         """Initialise the queue."""
         self._body = [None] * 10
         self._front = 0
         self._size = 0
         self._quantum = quantum
-    
-    def __str__(self):
-        """Return a string representation of the queue."""
-        output = '<-'
-        if self._size > 0:
-            i = self._front
-            for _ in range(self._size):
-                output += str(self._body[i]) + '-'
-                i = (i + 1) % len(self._body)
-        output += '<'
-        return output
 
     def add(self, item):
-        """Add an item to the queue."""
+        """Add item to the queue."""
         if self._size == 0:
             self._body[0] = item
             self._size = 1
@@ -35,7 +26,7 @@ class FeedbackQueue:
                 self.__requeue()
 
     def remove(self):
-        """Return (and remove) the item in the queue for longest."""
+        """Remove and return the item in the queue for longest."""
         if self._size == 0:
             return None
         item = self._body[self._front]
@@ -63,9 +54,11 @@ class FeedbackQueue:
         return self._body[self._front]
     
     def get_quantum(self):
+        """Return the time quantum of the Queue."""
         return self._quantum
 
     def set_quantum(self, quantum):
+        """Update the time quantum of the Queue."""
         self._quantum = quantum
     
     def __requeue(self):
@@ -82,16 +75,3 @@ class FeedbackQueue:
             oldpos = (oldpos + 1) % oldlength
         self._front = 0
         self._tail = self._size
-
-
-def main():
-    testqueue = FeedbackQueue(1)
-    for i in range(50):
-        testqueue.add(i)
-    for i in range(51):
-        testqueue.remove()
-    testqueue.add("A")
-
-
-if __name__ == "__main__":
-    main()
