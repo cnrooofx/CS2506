@@ -23,41 +23,13 @@ class Scheduler:
         for i in range(self._num_queues):
             quantum = (2 ** i) * self._base_quantum
             self._ready_queues.append(FeedbackQueue(quantum))
-    
-    def _update_quanta(self, new_quantum):
-        """Change the base quantum and update queue time slices accordingly.
 
-        Args:
-            new_quantum (int): The base quantum in miliseconds
-        """
-        self._base_quantum = new_quantum
-        for i, current_queue in enumerate(self._ready_queues):
-            quantum = (2 ** i) * self._base_quantum
-            current_queue.set_quantum(quantum)
-
-    def run(self, processes):
-        """Simulate the running of a series of processes.
-
-        Args:
-            processes (list): List of Process objects to run.
-        """
-        # Loop over the input processes and put them in the correct queues
-        print(self._ready_queues)
-        print("Processes\n" + "-" * 25)
-        for process in processes:
-            name = process.get_name()
-            priority = process.get_priority()
-            out = "Process {} - Priority: {}".format(name, priority)
-            if process.has_io():
-                io_time = process.get_io_time()
-                out += "\n|___ Has IO for {} quanta".format(io_time)
-            self._ready_queues[priority].add(process)
-            print(out)
-        
+    def run(self):
+        """Simulate the running of a series of processes."""
         print("-" * 25 + "\nRunning\n" + "-" * 25)
         q = 0
-        # while q < 100:
-        for _ in range(20):
+        idle_count = 0
+        while q < 10000:
             exec_time = self._base_quantum
             out = ""
             for priority, queue in enumerate(self._ready_queues):
@@ -86,35 +58,60 @@ class Scheduler:
                             out += "has finished execution"
                     break
             
-            # if len(self._blocked_queue) != 0:
-            #     for process in self._blocked_queue:
-            #         exec_status = process.io_operation(exec_time)
-            #         if exec_status:
-            #             process.increase_priority()
-            #             print(process.get_priority())
-            #             # self._ready_queues[].add(process)
+            if len(self._blocked_queue) != 0:
+                for process in self._blocked_queue:
+                    exec_status = process.io_operation(exec_time)
+                    if exec_status:
+                        process.increase_priority()
+                        self._ready_queues[process.get_priority()].add(process)
+                        self._blocked_queue.remove(process)
+
+            if out == "":
+                out = "Idle"
+                if idle_count > 100:
+                    print("--- Execution Finished ---")
+                    break
+                else:
+                    idle_count += 1
+            else:
+                idle_count = 0
 
             q += exec_time
-            if out == "":
-                print("[q{}] - Idle".format(q))
-            else:
-                print("[q{}] - {}".format(q, out))
+            print("[q{}] - {}".format(q, out))
+        
+    def add_processes(self, processes):
+        """Loop over the input processes and put them in the correct queues.
+        
+        Args:
+            processes (list): List of Process objects to run
+        """
+        print("Processes\n" + "-" * 25)
+        for process in processes:
+            name = process.get_name()
+            priority = process.get_priority()
+            out = "Process {} - Priority: {}".format(name, priority)
+            if process.has_io():
+                io_time = process.get_io_time()
+                out += "\n|___ Has IO for {} quanta".format(io_time)
+            self._ready_queues[priority].add(process)
+            print(out)
 
 
 def main():
     sched = Scheduler(base_quantum=2, num_queues=8)
     
-    processA = Process("A", 3, 20)
-    processB = Process("B", 7, 20)
-    processC = Process("C", 0, 30)
-    processD = Process("D", 1, 5, True, 20)
+    process_a = Process("A", 3, 20)
+    process_b = Process("B", 7, 20)
+    process_c = Process("C", 0, 30)
+    process_d = Process("D", 1, 5, True, 250)
+    process_e = Process("E", 6, 100)
     # processes = [processA]
-    processes = [processA, processB, processC, processD]
+    processes = [process_a, process_b, process_c, process_d, process_e]
 
     # for i, item in enumerate(processes):
     #     print(i, item.get_name())
-
-    sched.run(processes)
+    sched.add_processes(processes)
+    sched.run()
 
 
 if __name__ == "__main__":
