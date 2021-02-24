@@ -30,53 +30,29 @@ class Scheduler:
         q = 0
         idle_count = 0
         while q < 10000:
-            exec_time = self._base_quantum
+            cur_quantum = self._base_quantum
             out = ""
-            for priority, queue in enumerate(self._ready_queues):
+            for queue in self._ready_queues:
                 if queue.first:
                     process = queue.remove()
-                    out = "Process {} ".format(process.get_name())
-                    if process.has_io():
-                        out += "has IO, moving to blocked queue"
-                        self._blocked_queue.append(process)
-                    else:
-                        exec_time = queue.get_quantum()
-                        time_remaining = process.exec_remaining()
-                        if time_remaining > exec_time:
-                            process.execute(exec_time)
-                            if priority < self._num_queues-1:
-                                process.decrease_priority()
-                                new_priority = process.get_priority()
-                                self._ready_queues[new_priority].add(process)
-                                out += "didn't finish, moving to priority {}".format(new_priority)
-                            else:
-                                self._ready_queues[-1].add(process)
-                                out += "didn't finish, staying at lowest priority"
-                        else:
-                            exec_time = time_remaining
-                            process.execute(exec_time)
-                            out += "has finished execution"
+                    quantum = queue.get_quantum()
+                    cur_quantum, out = self._exec_handler(process, quantum)
                     break
             
             if len(self._blocked_queue) != 0:
-                for process in self._blocked_queue:
-                    exec_status = process.io_operation(exec_time)
-                    if exec_status:
-                        process.increase_priority()
-                        self._ready_queues[process.get_priority()].add(process)
-                        self._blocked_queue.remove(process)
+                # If there are processes in the blocked queue, run them
+                self._blocked_handler(cur_quantum)
 
             if out == "":
                 out = "Idle"
                 if idle_count > 100:
                     print("--- Execution Finished ---")
                     break
-                else:
-                    idle_count += 1
+                idle_count += 1
             else:
                 idle_count = 0
 
-            q += exec_time
+            q += cur_quantum
             print("[q{}] - {}".format(q, out))
         
     def add_processes(self, processes):
@@ -92,9 +68,56 @@ class Scheduler:
             out = "Process {} - Priority: {}".format(name, priority)
             if process.has_io():
                 io_time = process.get_io_time()
-                out += "\n|___ Has IO for {} quanta".format(io_time)
+                out += "\n`----> Has IO for {} quanta".format(io_time)
             self._ready_queues[priority].add(process)
             print(out)
+    
+    def _exec_handler(self, process, quantum):
+        """Execute the process, then put it into the appropriate queue.
+
+        Args:
+            process (Process object): Process to be executed
+            quantum (int): The time quantum of the current queue
+        
+        Returns:
+            exec_time (int): The time it took to execute the process
+            out (str): Description of state of the process after execution
+        """
+        out = "Process {} ".format(process.get_name())
+        time_remaining = process.get_exec_time()
+        if process.has_io():
+            out += "has IO, moving to blocked queue"
+            process.increase_priority()
+            self._blocked_queue.append(process)
+            exec_time = self._base_quantum
+        elif time_remaining > quantum:
+            exec_time = quantum
+            process.execute(exec_time)
+            priority = process.get_priority()
+            if priority < self._num_queues-1:
+                process.decrease_priority()
+                new_priority = process.get_priority()
+                self._ready_queues[new_priority].add(process)
+                out += "didn't finish, moving to priority {}".format(
+                    new_priority)
+            else:
+                self._ready_queues[-1].add(process)
+                out += "didn't finish, staying at lowest priority"
+        else:
+            exec_time = time_remaining
+            process.execute(exec_time)
+            out += "has finished execution"
+        return exec_time, out
+    
+    def _blocked_handler(self, quantum):
+        """
+        """
+        for process in self._blocked_queue:
+            exec_status = process.io_operation(quantum)
+            # If the IO has finished, move it back to ready queue
+            if exec_status:
+                self._ready_queues[process.get_priority()].add(process)
+                self._blocked_queue.remove(process)
 
 
 def main():
@@ -105,11 +128,14 @@ def main():
     process_c = Process("C", 0, 30)
     process_d = Process("D", 1, 5, True, 250)
     process_e = Process("E", 6, 100)
-    # processes = [processA]
-    processes = [process_a, process_b, process_c, process_d, process_e]
 
-    # for i, item in enumerate(processes):
-    #     print(i, item.get_name())
+    process_f = Process("F", 3, 20)
+    process_g = Process("G", 2, 54, True, 250)
+    process_h = Process("H", 0, 30)
+
+    processes = [process_a, process_b, process_c, process_d,
+                 process_e, process_f, process_g, process_h]
+
     sched.add_processes(processes)
     sched.run()
 
