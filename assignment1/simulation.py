@@ -55,7 +55,7 @@ def main():
     processes = [process_a, process_b, process_c, process_d,
                  process_e, process_f, process_g, process_h]
 
-    sim = Simulation(2, 8, processes)
+    sim = Simulation(5, 8, processes)
     sim.start()
 
 
