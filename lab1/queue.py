@@ -4,15 +4,14 @@ Script Name: queue.py
 Author: Conor Fox 119322236
 """
 
-class FeedbackQueue:
-    """A Feedback Queue to manage processes in a scheduler."""
+class Queue:
+    """Base Queue class."""
 
-    def __init__(self, quantum):
+    def __init__(self):
         """Initialise the queue."""
         self._body = [None] * 10
         self._front = 0
         self._size = 0
-        self._quantum = quantum
 
     def add(self, item):
         """Add item to the queue."""
@@ -52,15 +51,7 @@ class FeedbackQueue:
         if self._size == 0:
             return None
         return self._body[self._front]
-    
-    def get_quantum(self):
-        """Return the time quantum of the Queue."""
-        return self._quantum
 
-    def set_quantum(self, quantum):
-        """Update the time quantum of the Queue."""
-        self._quantum = quantum
-    
     def __requeue(self):
         """Grow and shrink the internal queue to save space."""
         oldbody = self._body
@@ -75,3 +66,19 @@ class FeedbackQueue:
             oldpos = (oldpos + 1) % oldlength
         self._front = 0
         self._tail = self._size
+
+class FeedbackQueue(Queue):
+    """A Feedback Queue to manage processes in a scheduler."""
+
+    def __init__(self, quantum):
+        """Initialise the queue."""
+        super().__init__()
+        self._quantum = quantum
+    
+    def get_quantum(self):
+        """Return the time quantum of the Queue."""
+        return self._quantum
+
+    def set_quantum(self, quantum):
+        """Update the time quantum of the Queue."""
+        self._quantum = quantum
