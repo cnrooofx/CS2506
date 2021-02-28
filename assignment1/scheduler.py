@@ -46,7 +46,14 @@ class Scheduler:
                 if queue.first:
                     process = queue.remove()
                     quantum = queue.get_quantum()
-                    cur_quantum, out = self._exec_handler(process, quantum)
+                    if process.has_io():
+                        out = "Process {} ".format(process.get_name())
+                        out += "has IO, moving to blocked queue"
+                        process.increase_priority()
+                        self._blocked_queue.add(process)
+                        cur_quantum = 0
+                    else:
+                        cur_quantum, out = self._exec_handler(process, quantum)
                     break
             
             if self._blocked_queue.length != 0:
@@ -83,12 +90,7 @@ class Scheduler:
         """
         out = "Process {} ".format(process.get_name())
         time_remaining = process.get_exec_time()
-        if process.has_io():
-            out += "has IO, moving to blocked queue"
-            process.increase_priority()
-            self._blocked_queue.add(process)
-            exec_time = self._base_quantum
-        elif time_remaining > quantum:
+        if time_remaining > quantum:
             exec_time = quantum
             process.execute(exec_time)
             priority = process.get_priority()
@@ -124,5 +126,4 @@ class Scheduler:
                 out += ", returning at priority {}".format(priority)
                 self._ready_queues[process.get_priority()].add(process)
                 return out
-            else:
-                self._blocked_queue.add(process)
+            self._blocked_queue.add(process)
