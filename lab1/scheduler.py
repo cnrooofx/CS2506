@@ -5,7 +5,6 @@ Author: Conor Fox 119322236
 """
 
 from queue import FeedbackQueue
-from process import Process
 
 
 class Scheduler:
@@ -13,7 +12,7 @@ class Scheduler:
         """Initialise the scheduler with the specified number of queues.
 
         Args:
-            base_quantum (int): Base quantum of the CPU in miliseconds
+            base_quantum (int): Base quantum of the CPU
             num_queues (int): Number of queues to create (Default: 8)
         """
         self._base_quantum = base_quantum
@@ -23,9 +22,18 @@ class Scheduler:
         for i in range(self._num_queues):
             quantum = (2 ** i) * self._base_quantum
             self._ready_queues.append(FeedbackQueue(quantum))
+    
+    def add_process(self, process, priority):
+        """Add the process at the specified priority.
+        
+        Args:
+            process (Process object): Process to add to scheduler
+            priority (int): The priority of the process
+        """
+        self._ready_queues[priority].add(process)
 
     def run(self):
-        """Simulate the running of a series of processes."""
+        """Run the scheduling algorithm."""
         print("-" * 25 + "\nRunning\n" + "-" * 25)
         q = 0
         idle_count = 0
@@ -58,23 +66,6 @@ class Scheduler:
 
             q += cur_quantum
             print("[q{}] - {}".format(q, out))
-        
-    def add_processes(self, processes):
-        """Loop over the input processes and put them in the correct queues.
-        
-        Args:
-            processes (list): List of Process objects to run
-        """
-        print("Processes\n" + "-" * 25)
-        for process in processes:
-            name = process.get_name()
-            priority = process.get_priority()
-            out = "Process {} - Priority: {}".format(name, priority)
-            if process.has_io():
-                io_time = process.get_io_time()
-                out += "\n`----> Has IO for {} quanta".format(io_time)
-            self._ready_queues[priority].add(process)
-            print(out)
     
     def _exec_handler(self, process, quantum):
         """Execute the process, then put it into the appropriate queue.
@@ -130,26 +121,3 @@ class Scheduler:
                 self._ready_queues[process.get_priority()].add(process)
                 self._blocked_queue.remove(process)
                 return out
-
-
-def main():
-    sched = Scheduler(base_quantum=2, num_queues=8)
-    
-    process_a = Process("A", 3, 20)
-    process_b = Process("B", 7, 340)
-    process_c = Process("C", 0, 12)
-    process_d = Process("D", 1, 50, True, 600)
-    process_e = Process("E", 6, 100)
-    process_f = Process("F", 3, 20)
-    process_g = Process("G", 2, 54, True, 350)
-    process_h = Process("H", 0, 30)
-
-    processes = [process_a, process_b, process_c, process_d,
-                 process_e, process_f, process_g, process_h]
-
-    sched.add_processes(processes)
-    sched.run()
-
-
-if __name__ == "__main__":
-    main()
