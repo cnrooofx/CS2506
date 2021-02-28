@@ -44,12 +44,12 @@ class Simulation:
 
 def main():
     process_a = Process("A", 3, 20)
-    process_b = Process("B", 7, 340)
+    process_b = Process("B", 7, 250)
     process_c = Process("C", 0, 12)
-    process_d = Process("D", 1, 50, True, 600)
+    process_d = Process("D", 1, 100, True, 600)
     process_e = Process("E", 6, 100)
-    process_f = Process("F", 3, 20)
-    process_g = Process("G", 2, 54, True, 350)
+    process_f = Process("F", 3, 200)
+    process_g = Process("G", 2, 54, True, 450)
     process_h = Process("H", 0, 30)
 
     processes = [process_a, process_b, process_c, process_d,
