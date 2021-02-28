@@ -41,11 +41,15 @@ class Scheduler:
             
             if len(self._blocked_queue) != 0:
                 # If there are processes in the blocked queue, run them
-                self._blocked_handler(cur_quantum)
+                outcome = self._blocked_handler(cur_quantum)
+                if outcome and not out:
+                    out += outcome
+                elif outcome and out:
+                    out += "\n\t" + outcome
 
             if out == "":
                 out = "Idle"
-                if idle_count > 100:
+                if idle_count > 25:
                     print("--- Execution Finished ---")
                     break
                 idle_count += 1
@@ -110,27 +114,34 @@ class Scheduler:
         return exec_time, out
     
     def _blocked_handler(self, quantum):
-        """
+        """Check if IO operation has finished and move process back to ready.
+
+        Args:
+            quantum (int): The current value of CPU quantum
         """
         for process in self._blocked_queue:
             exec_status = process.io_operation(quantum)
             # If the IO has finished, move it back to ready queue
             if exec_status:
+                name = process.get_name()
+                priority = process.get_priority()
+                out = "IO for Process {} finished".format(name)
+                out += " - Returning at priority {}".format(priority)
                 self._ready_queues[process.get_priority()].add(process)
                 self._blocked_queue.remove(process)
+                return out
 
 
 def main():
     sched = Scheduler(base_quantum=2, num_queues=8)
     
     process_a = Process("A", 3, 20)
-    process_b = Process("B", 7, 20)
-    process_c = Process("C", 0, 30)
-    process_d = Process("D", 1, 5, True, 250)
+    process_b = Process("B", 7, 340)
+    process_c = Process("C", 0, 12)
+    process_d = Process("D", 1, 50, True, 600)
     process_e = Process("E", 6, 100)
-
     process_f = Process("F", 3, 20)
-    process_g = Process("G", 2, 54, True, 250)
+    process_g = Process("G", 2, 54, True, 350)
     process_h = Process("H", 0, 30)
 
     processes = [process_a, process_b, process_c, process_d,
