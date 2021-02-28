@@ -4,7 +4,8 @@ Script Name: scheduler.py
 Author: Conor Fox 119322236
 """
 
-from queue import FeedbackQueue
+from queue import Queue, FeedbackQueue
+from process import Process
 
 
 class Scheduler:
@@ -18,7 +19,8 @@ class Scheduler:
         self._base_quantum = base_quantum
         self._num_queues = num_queues
         self._ready_queues = []
-        self._blocked_queue = []
+        self._blocked_queue = Queue()
+
         for i in range(self._num_queues):
             quantum = (2 ** i) * self._base_quantum
             self._ready_queues.append(FeedbackQueue(quantum))
@@ -47,7 +49,7 @@ class Scheduler:
                     cur_quantum, out = self._exec_handler(process, quantum)
                     break
             
-            if len(self._blocked_queue) != 0:
+            if self._blocked_queue.length != 0:
                 # If there are processes in the blocked queue, run them
                 outcome = self._blocked_handler(cur_quantum)
                 if outcome and not out:
@@ -55,6 +57,7 @@ class Scheduler:
                 elif outcome and out:
                     out += "\n\t" + outcome
 
+            # Cut off the scheduler if it's idle for too long
             if out == "":
                 out = "Idle"
                 if idle_count > 25:
@@ -83,7 +86,7 @@ class Scheduler:
         if process.has_io():
             out += "has IO, moving to blocked queue"
             process.increase_priority()
-            self._blocked_queue.append(process)
+            self._blocked_queue.add(process)
             exec_time = self._base_quantum
         elif time_remaining > quantum:
             exec_time = quantum
@@ -110,14 +113,16 @@ class Scheduler:
         Args:
             quantum (int): The current value of CPU quantum
         """
-        for process in self._blocked_queue:
+        for i in range(self._blocked_queue.length):
+            process = self._blocked_queue.remove()
             exec_status = process.io_operation(quantum)
             # If the IO has finished, move it back to ready queue
             if exec_status:
                 name = process.get_name()
-                priority = process.get_priority()
                 out = "IO for Process {} finished".format(name)
-                out += " - Returning at priority {}".format(priority)
+                priority = process.get_priority()
+                out += ", returning at priority {}".format(priority)
                 self._ready_queues[process.get_priority()].add(process)
-                self._blocked_queue.remove(process)
                 return out
+            else:
+                self._blocked_queue.add(process)
