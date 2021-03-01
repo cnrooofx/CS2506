@@ -41,7 +41,7 @@ class Scheduler:
         print("-" * 25 + "\nRunning\n" + "-" * 25)
         q = 0
         idle_count = 0
-        while q < 10000:
+        while True:
             cur_quantum = self._base_quantum
             out = ""
             for queue in self._ready_queues:
@@ -117,7 +117,8 @@ class Scheduler:
         Args:
             quantum (int): The current value of CPU quantum
         """
-        for i in range(self._blocked_queue.length):
+        blocked_length = self._blocked_queue.length
+        for _ in range(blocked_length):
             process = self._blocked_queue.remove()
             exec_status = process.io_operation(quantum)
             # If the IO has finished, move it back to ready queue
