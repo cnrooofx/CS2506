@@ -9,6 +9,8 @@ from process import Process
 
 
 class Scheduler:
+    """Scheduler using Multi-Feedback Queues."""
+
     def __init__(self, base_quantum, num_queues=8):
         """Initialise the scheduler with the specified number of queues.
 

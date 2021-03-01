@@ -9,6 +9,8 @@ from process import Process
 
 
 class Simulation:
+    """Simulate the running of the Scheduler."""
+
     def __init__(self, base_quantum, num_queues, processes):
         """Initialise the simulation.
 
@@ -43,6 +45,7 @@ class Simulation:
 
 
 def main():
+    """Add the processes and start simulation."""
     process_a = Process("A", 3, 20)
     process_b = Process("B", 7, 250)
     process_c = Process("C", 0, 12)
