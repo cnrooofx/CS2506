@@ -1,9 +1,17 @@
-
 from page import Page
 
+"""Block.
+
+Script Name: block.py
+Author: Conor Fox 119322236
+"""
+
 class Block:
+    """A block of memory pages."""
     
     def __init__(self, num_pages, page_size=0):
+        """Initialise a new block."""
+        self._size = num_pages * page_size
         self._num_pages = num_pages
         self._pages = []
 
@@ -30,6 +38,9 @@ class Block:
 
     def page_count(self):
         return self._num_pages
+
+    def get_size(self):
+        return self._size
 
 
 def main():
